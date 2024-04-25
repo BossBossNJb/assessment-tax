@@ -26,11 +26,22 @@ type CalculationResponse struct {
 
 // calculateTax calculates the tax based on income and allowances.
 func CalculateTax(income float64, wht float64, allowances []Allowance) float64 {
-	personalAllowance := 60000.0
 	var tax float64
+	var taxFinalPaid float64
+	var donationDeduction float64
+	// personalAllowance represents the fixed personal allowance.
+	personalAllowance := 60000.0
+
+	// Calculate donation deduction
+	for _, allowance := range allowances {
+		if allowance.AllowanceType == "donation" {
+			donationDeduction = allowance.Amount
+			break
+		}
+	}
 
 	// Calculate taxable income after deductions
-	incomeAfterDeductions := income - personalAllowance
+	incomeAfterDeductions := income - personalAllowance - donationDeduction
 	taxableIncome := incomeAfterDeductions
 
 	// Calculate tax based on taxable income
@@ -46,7 +57,8 @@ func CalculateTax(income float64, wht float64, allowances []Allowance) float64 {
 		tax = 335000 + (taxableIncome-2000000)*0.35
 	}
 
-	taxFinalPaid := tax - wht
+	// Calculate tax final paid on taxable income after deductions including withholding tax
+	taxFinalPaid = tax - wht
 
 	// Ensure tax is not negative
 	if taxFinalPaid < 0 {

@@ -35,6 +35,18 @@ func TestCalculateTax(t *testing.T) {
 			},
 			expectedResult: 4000.0,
 		},
+		{
+			name:        "Story: EXP03 calculate tax with donation reduce",
+			totalIncome: 500000.0,
+			wht:         0.0,
+			allowances: []Allowance{
+				{
+					AllowanceType: "donation",
+					Amount:        100000.0,
+				},
+			},
+			expectedResult: 19000.0,
+		},
 	}
 
 	// Run test cases
