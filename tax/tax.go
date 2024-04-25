@@ -25,7 +25,7 @@ type CalculationResponse struct {
 }
 
 // calculateTax calculates the tax based on income and allowances.
-func CalculateTax(income float64, allowances []Allowance) float64 {
+func CalculateTax(income float64, wht float64, allowances []Allowance) float64 {
 	personalAllowance := 60000.0
 	var tax float64
 
@@ -46,10 +46,12 @@ func CalculateTax(income float64, allowances []Allowance) float64 {
 		tax = 335000 + (taxableIncome-2000000)*0.35
 	}
 
+	taxFinalPaid := tax - wht
+
 	// Ensure tax is not negative
-	if tax < 0 {
-		tax = 0
+	if taxFinalPaid < 0 {
+		taxFinalPaid = 0
 	}
 
-	return tax
+	return taxFinalPaid
 }

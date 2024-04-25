@@ -1,5 +1,3 @@
-// tax_handler.go
-
 package tax
 
 import (
@@ -15,7 +13,7 @@ func CalculateTaxHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request")
 	}
 
-	taxAmount := CalculateTax(request.TotalIncome, request.Allowances)
+	taxAmount := CalculateTax(request.TotalIncome, request.WHT, request.Allowances)
 
 	response := CalculationResponse{Tax: taxAmount}
 	return c.JSON(http.StatusOK, response)

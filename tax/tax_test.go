@@ -1,5 +1,3 @@
-// tax_test.go
-
 package tax
 
 import (
@@ -7,21 +5,48 @@ import (
 )
 
 func TestCalculateTax(t *testing.T) {
-	// Define the test case using the provided JSON payload
-	totalIncome := 500000.0
-	allowances := []Allowance{
+	testCases := []struct {
+		name           string
+		totalIncome    float64
+		wht            float64
+		allowances     []Allowance
+		expectedResult float64
+	}{{
+		name:        "Story: EXP01 calculate tax",
+		totalIncome: 500000.0,
+		wht:         0.0,
+		allowances: []Allowance{
+			{
+				AllowanceType: "donation",
+				Amount:        0.0,
+			},
+		},
+		expectedResult: 29000.0,
+	},
 		{
-			AllowanceType: "donation",
-			Amount:        0.0,
+			name:        "Story: EXP02 calculate tax with WHT",
+			totalIncome: 500000.0,
+			wht:         25000.0,
+			allowances: []Allowance{
+				{
+					AllowanceType: "donation",
+					Amount:        0.0,
+				},
+			},
+			expectedResult: 4000.0,
 		},
 	}
-	expectedTax := 29000.0
 
-	// Call the calculateTax function
-	actualTax := CalculateTax(totalIncome, allowances)
+	// Run test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Call the calculateTax function
+			actualResult := CalculateTax(tc.totalIncome, tc.wht, tc.allowances)
 
-	// Compare the actual tax with the expected tax
-	if actualTax != expectedTax {
-		t.Errorf("expected tax %f; got %f", expectedTax, actualTax)
+			// Compare the actual result with the expected result
+			if actualResult != tc.expectedResult {
+				t.Errorf("test case %s: expected result %f; got %f", tc.name, tc.expectedResult, actualResult)
+			}
+		})
 	}
 }
