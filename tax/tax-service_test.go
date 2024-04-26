@@ -141,6 +141,7 @@ func TestSetPersonalDeductionHandler(t *testing.T) {
 
 }
 
+// TestTaxDetails tests the TaxDetails function.
 func TestTaxDetails(t *testing.T) {
 	testCases := []struct {
 		name               string
@@ -150,7 +151,7 @@ func TestTaxDetails(t *testing.T) {
 		{
 			name:               "Valid",
 			expectedStatusCode: http.StatusOK,
-			expectedResponse:   `{"personalDeduction":70000}`,
+			expectedResponse:   `{"personalDeduction":70000,"kreceiptLimitDeduction":50000}`,
 		},
 	}
 	// Run test cases
@@ -159,7 +160,7 @@ func TestTaxDetails(t *testing.T) {
 
 			e := echo.New()
 
-			req := httptest.NewRequest(http.MethodGet, "/tax/calculations/deteils", nil)
+			req := httptest.NewRequest(http.MethodGet, "/tax/calculations/details", nil)
 			rec := httptest.NewRecorder()
 
 			c := e.NewContext(req, rec)
@@ -179,3 +180,42 @@ func TestTaxDetails(t *testing.T) {
 		})
 	}
 }
+
+// func TestTaxDetails(t *testing.T) {
+// 	testCases := []struct {
+// 		name               string
+// 		expectedStatusCode int
+// 		expectedResponse   string
+// 	}{
+// 		{
+// 			name:               "Valid",
+// 			expectedStatusCode: http.StatusOK,
+// 			expectedResponse:   `{"personalDeduction":70000}`,
+// 		},
+// 	}
+// 	// Run test cases
+// 	for _, tc := range testCases {
+// 		t.Run(tc.name, func(t *testing.T) {
+
+// 			e := echo.New()
+
+// 			req := httptest.NewRequest(http.MethodGet, "/tax/calculations/deteils", nil)
+// 			rec := httptest.NewRecorder()
+
+// 			c := e.NewContext(req, rec)
+
+// 			// Call TaxDetails function
+// 			err := TaxDetails(c)
+
+// 			// Check status code matches
+// 			assert.Equal(t, tc.expectedStatusCode, rec.Code)
+
+// 			// Check response body
+// 			actualResponseBody := strings.TrimSpace(rec.Body.String())
+// 			assert.Equal(t, tc.expectedResponse, actualResponseBody)
+
+// 			// Check error
+// 			assert.NoError(t, err)
+// 		})
+// 	}
+// }

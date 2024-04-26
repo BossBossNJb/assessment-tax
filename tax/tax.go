@@ -67,8 +67,8 @@ func CalculateTax(income float64, wht float64, allowances []Allowance, personalD
 		}
 
 		if allowance.AllowanceType == "k-receipt" {
-			if allowance.Amount > 50000 { // Ensure that kreceipt allowance limit is 100000
-				kreceiptDeduction = 50000
+			if allowance.Amount > KreceiptLimitDeduction { // Ensure that kreceipt allowance limit is 100000
+				kreceiptDeduction = KreceiptLimitDeduction
 			} else if allowance.Amount < 0 { // Ensure that kreceipt allowance is not negative
 				kreceiptDeduction = 0
 			} else {
