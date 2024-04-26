@@ -2,6 +2,7 @@ package tax
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,11 +19,12 @@ func TestCalculateTaxHandler(t *testing.T) {
 	// Create the request payload
 	requestBody := `{
 		"totalIncome": 500000.0,
+		"wht": 0.0,
 		"allowances": [
-			{
-				"allowanceType": "donation",
-				"amount": 0.0
-			}
+		  {
+			"allowanceType": "donation",
+			"amount": 200000.0
+		  }
 		]
 	}`
 
@@ -44,8 +46,23 @@ func TestCalculateTaxHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	// Check the response body
-	expectedResponseBody := `{"tax":29000}`
+	expectedResponseBody := CalculationResponse{
+		Tax: 19000,
+		TaxLevel: []TaxLevel{
+			{"0-150,000", 0},
+			{"150,001-500,000", 19000},
+			{"500,001-1,000,000", 0},
+			{"1,000,001-2,000,000", 0},
+			{"2,000,001 ขึ้นไป", 0},
+		},
+	}
+	expectedJSON, err := json.Marshal(expectedResponseBody)
+	if err != nil {
+		t.Fatalf("failed to marshal expected response body: %v", err)
+	}
+
+	// Check the response body
 	actualResponseBody := strings.TrimSpace(rec.Body.String()) // Trim the newline character
-	assert.Equal(t, expectedResponseBody, actualResponseBody)
+	assert.Equal(t, string(expectedJSON), actualResponseBody)
 
 }

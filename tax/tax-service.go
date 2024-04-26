@@ -13,8 +13,9 @@ func CalculateTaxHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Invalid request")
 	}
 
-	taxAmount := CalculateTax(request.TotalIncome, request.WHT, request.Allowances)
+	// Calculate tax amount and tax levels
+	response := CalculateTax(request.TotalIncome, request.WHT, request.Allowances)
 
-	response := CalculationResponse{Tax: taxAmount}
+	// Return the response
 	return c.JSON(http.StatusOK, response)
 }
