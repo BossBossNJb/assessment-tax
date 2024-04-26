@@ -29,19 +29,36 @@ func CalculateTax(income float64, wht float64, allowances []Allowance) float64 {
 	var tax float64
 	var taxFinalPaid float64
 	var donationDeduction float64
+
 	// personalAllowance represents the fixed personal allowance.
 	personalAllowance := 60000.0
+
+	// Ensure that personal allowance more equal 60000
+	if personalAllowance < 600000 {
+		personalAllowance = 60000
+	}
 
 	// Calculate donation deduction
 	for _, allowance := range allowances {
 		if allowance.AllowanceType == "donation" {
-			donationDeduction = allowance.Amount
+			if allowance.Amount > 100000 { // Ensure that donation allowance limit is 100000
+				donationDeduction = 100000
+			} else if allowance.Amount < 0 { // Ensure that donation allowance is not negative
+				donationDeduction = 0
+			} else {
+				donationDeduction = allowance.Amount
+			}
 			break
 		}
 	}
 
 	// Calculate taxable income after deductions
 	incomeAfterDeductions := income - personalAllowance - donationDeduction
+
+	// Ensure that income after deductions is not negative
+	if incomeAfterDeductions < 0 {
+		incomeAfterDeductions = 0
+	}
 	taxableIncome := incomeAfterDeductions
 
 	// Calculate tax based on taxable income
@@ -55,6 +72,11 @@ func CalculateTax(income float64, wht float64, allowances []Allowance) float64 {
 		tax = 95000 + (taxableIncome-1000000)*0.2
 	} else {
 		tax = 335000 + (taxableIncome-2000000)*0.35
+	}
+
+	// Ensure if withholding tax exceeds the limit 100000
+	if wht > 100000 {
+		wht = 100000
 	}
 
 	// Calculate tax final paid on taxable income after deductions including withholding tax

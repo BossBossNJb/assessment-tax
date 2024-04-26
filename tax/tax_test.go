@@ -42,7 +42,7 @@ func TestCalculateTax(t *testing.T) {
 			allowances: []Allowance{
 				{
 					AllowanceType: "donation",
-					Amount:        100000.0,
+					Amount:        200000.0,
 				},
 			},
 			expectedResult: 19000.0,
