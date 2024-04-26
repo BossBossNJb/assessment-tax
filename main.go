@@ -15,8 +15,12 @@ func main() {
 		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
 	})
 
+	// Define the route for setting personal deduction by admin
+	e.POST("/admin/deductions/personal", tax.SetPersonalDeductionHandler) // Update the route handler
+
 	// Tax calculation endpoint handler
 	e.POST("/tax/calculations", tax.CalculateTaxHandler)
+	e.GET("/tax/calculations", tax.TaxDetails)
 
 	// Start the server
 	e.Logger.Fatal(e.Start(":1323"))

@@ -1,6 +1,7 @@
 package tax
 
 import (
+	"errors"
 	_ "net/http"
 
 	_ "github.com/labstack/echo/v4"
@@ -32,18 +33,11 @@ type CalculationResponse struct {
 }
 
 // calculateTax calculates the tax based on income and allowances.
-func CalculateTax(income float64, wht float64, allowances []Allowance) CalculationResponse {
+func CalculateTax(income float64, wht float64, allowances []Allowance, personalDeduction float64) (CalculationResponse, error) {
 	var tax float64
 	var taxFinalPaid float64
 	var donationDeduction float64
-
-	// personalAllowance represents the fixed personal allowance.
-	personalDeduction := 60000.0
-
-	// Ensure that personal allowance more equal 60000
-	if personalDeduction < 600000 {
-		personalDeduction = 60000
-	}
+	// var personalDeduction float64
 
 	// Define tax levels
 	taxLevels := []TaxLevel{
@@ -54,8 +48,10 @@ func CalculateTax(income float64, wht float64, allowances []Allowance) Calculati
 		{"2,000,001 ขึ้นไป", 0.0},
 	}
 
-	// Ensure that personal allowance more equal 60000
-	if personalDeduction < 600000 {
+	// personalAllowance represents the fixed personal allowance.
+	if personalDeduction < 0 { // Ensure that personal deductio is not negative
+		personalDeduction = 0
+	} else if personalDeduction < 60000 { // Ensure that personal deduction is at least 60000
 		personalDeduction = 60000
 	}
 
@@ -128,13 +124,15 @@ func CalculateTax(income float64, wht float64, allowances []Allowance) Calculati
 		taxTotal += level.Tax
 	}
 
-	// Ensure if withholding tax exceeds the limit 100000
-	if wht > 100000 {
-		wht = 100000
+	// Ensure that the withholding tax provided for the calculation does not exceed the total income.
+	if wht > income {
+		return CalculationResponse{}, errors.New("withholding tax cannot be greater than the total income")
 	}
 
-	// Ensure if withholding tax exceeds the limit 100000
-	if wht > 100000 {
+	// withholding represents the fixed personal allowance.
+	if wht < 0 { // Ensure that withholding  is not negative
+		wht = 0
+	} else if wht > 100000 { // Ensure if withholding tax exceeds the limit 100000
 		wht = 100000
 	}
 
@@ -150,5 +148,5 @@ func CalculateTax(income float64, wht float64, allowances []Allowance) Calculati
 	return CalculationResponse{
 		Tax:      taxFinalPaid,
 		TaxLevel: taxLevels,
-	}
+	}, nil
 }

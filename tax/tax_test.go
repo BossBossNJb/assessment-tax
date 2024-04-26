@@ -10,6 +10,7 @@ func TestCalculateTax(t *testing.T) {
 		totalIncome       float64
 		wht               float64
 		allowances        []Allowance
+		personalDeduction float64
 		expectedTaxResult float64
 		expectedTaxLevels []TaxLevel
 	}{
@@ -57,7 +58,10 @@ func TestCalculateTax(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Call the calculateTax function
-			response := CalculateTax(tc.totalIncome, tc.wht, tc.allowances)
+			response, err := CalculateTax(tc.totalIncome, tc.wht, tc.allowances, tc.personalDeduction)
+			if err != nil {
+				t.Fatalf("error calculating tax: %v", err)
+			}
 			actualTaxResult := response.Tax           // Access the Tax of CalculationResponse
 			actualTaxLevelResult := response.TaxLevel // Access the TaxLevel  of CalculationResponse
 
