@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/BossBossNJb/assessment-tax/tax"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -15,13 +21,51 @@ func main() {
 		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
 	})
 
+	// Get the values of environment variables
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	port := os.Getenv("PORT")
+
+	// Define a custom middleware for admin API group
+	adminAuthMiddleware := middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		// Check if the provided username and password match the admin credentials
+		if username == adminUsername && password == adminPassword {
+			return true, nil
+		}
+		return false, nil
+	})
+
+	// Group the admin API routes and apply basic authentication middleware
+	adminGroup := e.Group("/admin")
+	adminGroup.Use(adminAuthMiddleware)
+
 	// Define the route for setting personal deduction by admin
-	e.POST("/admin/deductions/personal", tax.SetPersonalDeductionHandler) // Update the route handler
+	adminGroup.POST("/deductions/personal", tax.SetPersonalDeductionHandler)
+
+	// Define the route for setting k-receipt limit deduction by admin
+	adminGroup.POST("/deductions/k-receipt", tax.SetKreceipLimitDeductionHandler)
+
+	// Group tax-related endpoints
+	taxGroup := e.Group("/tax")
 
 	// Tax calculation endpoint handler
-	e.POST("/tax/calculations", tax.CalculateTaxHandler)
-	e.GET("/tax/calculations", tax.TaxDetails)
+	taxGroup.POST("/calculations", tax.CalculateTaxHandler)
+	taxGroup.GET("/calculations/deteils", tax.TaxDetails)
 
 	// Start the server
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(port))
+
+	// Graceful Shutdown
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt)
+	<-shutdown
+
+	// Print "shutting down the server"
+	fmt.Println("Shutting down the server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
