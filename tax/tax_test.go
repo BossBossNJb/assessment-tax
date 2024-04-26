@@ -52,6 +52,20 @@ func TestCalculateTax(t *testing.T) {
 				{"2,000,001 ขึ้นไป", 0.0},
 			},
 		},
+		{
+			name:              "Story: EXP07 calculate tax with k-receipt and tax level detail",
+			totalIncome:       500000.0,
+			wht:               0.0,
+			allowances:        []Allowance{{AllowanceType: "k-receipt", Amount: 200000.0}, {AllowanceType: "donation", Amount: 100000.0}},
+			expectedTaxResult: 14000.0,
+			expectedTaxLevels: []TaxLevel{
+				{"0-150,000", 0.0},
+				{"150,001-500,000", 14000.0},
+				{"500,001-1,000,000", 0.0},
+				{"1,000,001-2,000,000", 0.0},
+				{"2,000,001 ขึ้นไป", 0.0},
+			},
+		},
 	}
 
 	// Run test cases

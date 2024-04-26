@@ -37,8 +37,7 @@ func CalculateTax(income float64, wht float64, allowances []Allowance, personalD
 	var tax float64
 	var taxFinalPaid float64
 	var donationDeduction float64
-	// var personalDeduction float64
-
+	var kreceiptDeduction float64
 	// Define tax levels
 	taxLevels := []TaxLevel{
 		{"0-150,000", 0.0},
@@ -65,12 +64,21 @@ func CalculateTax(income float64, wht float64, allowances []Allowance, personalD
 			} else {
 				donationDeduction = allowance.Amount
 			}
-			break
+		}
+
+		if allowance.AllowanceType == "k-receipt" {
+			if allowance.Amount > 50000 { // Ensure that kreceipt allowance limit is 100000
+				kreceiptDeduction = 50000
+			} else if allowance.Amount < 0 { // Ensure that kreceipt allowance is not negative
+				kreceiptDeduction = 0
+			} else {
+				kreceiptDeduction = allowance.Amount
+			}
 		}
 	}
 
 	// Calculate taxable income after deductions
-	incomeAfterDeductions := income - personalDeduction - donationDeduction
+	incomeAfterDeductions := income - personalDeduction - donationDeduction - kreceiptDeduction
 
 	// Ensure that income after deductions is not negative
 	if incomeAfterDeductions < 0 {
