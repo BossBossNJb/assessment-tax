@@ -8,7 +8,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY *.go ./
+COPY . ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /assessment-tax main.go
 
@@ -20,6 +20,9 @@ RUN go test -v ./...
 FROM gcr.io/distroless/base-debian11 AS build-release-stage
 
 WORKDIR /
+
+# Copy the .env file into the container
+COPY .env .env
 
 COPY --from=build-stage /assessment-tax /assessment-tax
 

@@ -1,14 +1,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"time"
 
 	"github.com/BossBossNJb/assessment-tax/tax"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -16,15 +15,23 @@ import (
 func main() {
 	e := echo.New()
 
-	// Root endpoint handler
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
-	})
+	// envFilePath := ".env"
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	// Get the values of environment variables
 	adminUsername := os.Getenv("ADMIN_USERNAME")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	// databaseURL := os.Getenv("DATABASE_URL")
 	port := os.Getenv("PORT")
+
+	// Root endpoint handler
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
+	})
 
 	// Define a custom middleware for admin API group
 	adminAuthMiddleware := middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
@@ -53,19 +60,20 @@ func main() {
 	taxGroup.GET("/calculations/deteils", tax.TaxDetails)
 
 	// Start the server
-	e.Logger.Fatal(e.Start(port))
+	// e.Logger.Fatal(e.Start(":" + port))
+	fmt.Println("port:", port)
+	fmt.Println("adminUsername:", adminUsername)
+	e.Logger.Fatal(e.Start(":" + port))
 
 	// Graceful Shutdown
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt)
-	<-shutdown
-
-	// Print "shutting down the server"
-	fmt.Println("Shutting down the server...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
-	}
+	// shutdown := make(chan os.Signal, 1)
+	// signal.Notify(shutdown, os.Interrupt)
+	// <-shutdown
+	// // Print "shutting down the server"
+	// fmt.Println("Shutting down the server...")
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cancel()
+	// if err := e.Shutdown(ctx); err != nil {
+	// 	e.Logger.Fatal(err)
+	// }
 }
