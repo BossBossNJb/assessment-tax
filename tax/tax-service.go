@@ -3,12 +3,10 @@ package tax
 import (
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 
+	database "github.com/BossBossNJb/assessment-tax/database"
 	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 // AdminDeductionRequest represents the request structure for setting personal deduction by admin.
@@ -23,13 +21,15 @@ type AdminPersonalDeductionResponse struct {
 
 // KreceiptLimitDeductionResponse response by admin.
 type KreceiptLimitDeductionResponse struct {
-	KreceiptLimitDeduction float64 `json:"kreceiptLimitDeduction"`
+	// KreceiptLimitDeduction float64 `json:"kreceiptLimitDeduction"`
+	KreceiptLimitDeduction float64 `json:"kReceipt"`
 }
 
 // TaxDetailsResponse represents the response structure for tax details.
 type TaxDetailsResponse struct {
 	PersonalDeduction      float64 `json:"personalDeduction"`
-	KreceiptLimitDeduction float64 `json:"kreceiptLimitDeduction"`
+	KreceiptLimitDeduction float64 `json:"kReceipt"`
+	// KReceipt float64 `json:"kReceipt"`
 }
 
 // PersonalDeduction Default .
@@ -39,14 +39,43 @@ var PersonalDeduction float64 = 60000.0
 var KreceiptLimitDeduction float64 = 50000.0
 
 // CalculateTaxHandler handles the HTTP request for tax calculation.
-func CalculateTaxHandler(c echo.Context) error {
+func CalculateTaxHandler(c echo.Context, db *gorm.DB) error {
 	var request CalculationRequest
 	if err := c.Bind(&request); err != nil {
 		return c.JSON(http.StatusBadRequest, "Invalid request")
 	}
 
+	var adminConfig database.AdminConfigDatabase
+	if err := db.First(&adminConfig).Error; err != nil {
+		return err
+	}
+	// Update variables with database values
+	PersonalDeduction := adminConfig.PersonalDeduction
+	KreceiptLimitDeduction := adminConfig.KreceiptLimitDeduction
+
+	var donationDeduction float64
+	var kreceiptDeduction float64
+	for _, allowance := range request.Allowances {
+		switch allowance.AllowanceType {
+		case "donation":
+			donationDeduction = allowance.Amount
+		case "k-receipt":
+			kreceiptDeduction = allowance.Amount
+		}
+	}
+
+	// Check for negative values of PersonalDeduction, donation deduction, and k-receipt deduction
+	if PersonalDeduction < 0 || donationDeduction < 0 || kreceiptDeduction < 0 {
+		return c.JSON(http.StatusBadRequest, "Invalid values for deductions: PersonalDeduction, donation, or k-receipt")
+	}
+
+	// Check for WHT is non-negative and does not exceed total income
+	if request.WHT < 0 || request.WHT > request.TotalIncome {
+		return c.JSON(http.StatusBadRequest, "Invalid value for WHT: must be non-negative and not exceed total income")
+	}
+
 	// Calculate tax amount and tax levels
-	response, err := CalculateTax(request.TotalIncome, request.WHT, request.Allowances, PersonalDeduction)
+	response, err := CalculateTax(request.TotalIncome, request.WHT, request.Allowances, PersonalDeduction, KreceiptLimitDeduction)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, fmt.Sprintf("Error calculating tax: %v", err))
 	}
@@ -63,8 +92,8 @@ func SetPersonalDeductionHandler(c echo.Context) error {
 	}
 
 	// Check if the requested amount is within the allowed range
-	if request.Amount > 100000 {
-		return c.JSON(http.StatusBadRequest, "Amount exceeds the maximum allowed limit")
+	if request.Amount < 10000.0 || request.Amount > 100000.0 {
+		return c.JSON(http.StatusBadRequest, "Amount exceeds PersonalDeduction the allowed limit")
 	}
 
 	// Update the personal deduction value
@@ -91,57 +120,14 @@ func SetKreceipLimitDeductionHandler(c echo.Context) error {
 	}
 
 	// Check if the requested amount is within the allowed range
-	if request.Amount > 100000 {
-		return c.JSON(http.StatusBadRequest, "Amount exceeds the maximum allowed limit")
+	if request.Amount < 10000.0 || request.Amount > 100000.0 {
+		return c.JSON(http.StatusBadRequest, "Amount exceeds KreceipLimitDeduction the allowed limit")
 	}
 
 	// Update the Kreceipt limit deduction value
 	KreceiptLimitDeduction = request.Amount
 
 	response := KreceiptLimitDeductionResponse{KreceiptLimitDeduction: KreceiptLimitDeduction}
+
 	return c.JSON(http.StatusOK, response)
-}
-
-func TestSetKreceipLimitDeductionHandler(t *testing.T) {
-	testCases := []struct {
-		name               string
-		requestBody        string
-		expectedStatusCode int
-		expectedResponse   string
-	}{
-		{
-			name:               "Valid",
-			requestBody:        `{"amount": 80000}`,
-			expectedStatusCode: http.StatusOK,
-			expectedResponse:   `{"kreceiptLimitDeduction":80000}`,
-		},
-		{
-			name:               "ExceedsLimit",
-			requestBody:        `{"amount": 150000}`,
-			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   `"Amount exceeds the maximum allowed limit"`,
-		},
-		{
-			name:               "InvalidRequest",
-			requestBody:        `{"invalid": "data"}`,
-			expectedStatusCode: http.StatusBadRequest,
-			expectedResponse:   `"Invalid request"`,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			e := echo.New()
-			req := httptest.NewRequest(http.MethodPost, "/set-kreceip-limit-deduction", strings.NewReader(tc.requestBody))
-			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
-
-			err := SetKreceipLimitDeductionHandler(c)
-
-			assert.Equal(t, tc.expectedStatusCode, rec.Code)
-			assert.Equal(t, tc.expectedResponse, strings.TrimSpace(rec.Body.String()))
-			assert.NoError(t, err)
-		})
-	}
 }

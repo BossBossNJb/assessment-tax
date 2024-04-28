@@ -32,8 +32,12 @@ type CalculationResponse struct {
 	TaxLevel []TaxLevel `json:"taxLevel"`
 }
 
+type TaxRefundResponse struct {
+	TaxRefund float64 `json:"taxRefund"`
+}
+
 // calculateTax calculates the tax based on income and allowances.
-func CalculateTax(income float64, wht float64, allowances []Allowance, personalDeduction float64) (CalculationResponse, error) {
+func CalculateTax(income float64, wht float64, allowances []Allowance, personalDeduction float64, KreceiptLimitDeduction float64) (CalculationResponse, error) {
 	var tax float64
 	var taxFinalPaid float64
 	var donationDeduction float64
@@ -48,10 +52,8 @@ func CalculateTax(income float64, wht float64, allowances []Allowance, personalD
 	}
 
 	// personalAllowance represents the fixed personal allowance.
-	if personalDeduction < 0 { // Ensure that personal deductio is not negative
-		personalDeduction = 0
-	} else if personalDeduction < 60000 { // Ensure that personal deduction is at least 60000
-		personalDeduction = 60000
+	if personalDeduction < 10000 { // Ensure that personal deductio is not less 10000
+		personalDeduction = 10000
 	}
 
 	// Calculate donation deduction
@@ -87,7 +89,7 @@ func CalculateTax(income float64, wht float64, allowances []Allowance, personalD
 	taxableIncome := incomeAfterDeductions
 
 	// Calculate tax for each level
-	for i, _ := range taxLevels {
+	for i := range taxLevels {
 		tax = 0
 		switch i {
 		case 0: // "0-150,000"

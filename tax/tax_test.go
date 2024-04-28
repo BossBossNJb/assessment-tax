@@ -1,49 +1,56 @@
 package tax
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestCalculateTax(t *testing.T) {
 	testCases := []struct {
-		name              string
-		totalIncome       float64
-		wht               float64
-		allowances        []Allowance
-		personalDeduction float64
-		expectedTaxResult float64
-		expectedTaxLevels []TaxLevel
+		name                   string
+		totalIncome            float64
+		wht                    float64
+		allowances             []Allowance
+		personalDeduction      float64
+		KreceiptLimitDeduction float64
+		expectedTaxResult      float64
+		expectedTaxLevels      []TaxLevel
 	}{
 		{
-			name:              "Story: EXP01 calculate tax",
-			totalIncome:       500000.0,
-			wht:               0.0,
-			allowances:        []Allowance{{AllowanceType: "donation", Amount: 0.0}},
-			expectedTaxResult: 29000.0,
-			expectedTaxLevels: []TaxLevel{},
+			name:                   "Story: EXP01 calculate tax",
+			totalIncome:            500000.0,
+			wht:                    0.0,
+			allowances:             []Allowance{{AllowanceType: "donation", Amount: 0.0}},
+			personalDeduction:      60000.0,
+			KreceiptLimitDeduction: 50000.0,
+			expectedTaxResult:      29000.0,
+			expectedTaxLevels:      []TaxLevel{},
 		},
 		{
-			name:              "Story: EXP02 calculate tax with WHT",
-			totalIncome:       500000.0,
-			wht:               25000.0,
-			allowances:        []Allowance{{AllowanceType: "donation", Amount: 0.0}},
-			expectedTaxResult: 4000.0,
-			expectedTaxLevels: []TaxLevel{},
+			name:                   "Story: EXP02 calculate tax with WHT",
+			totalIncome:            500000.0,
+			wht:                    25000.0,
+			allowances:             []Allowance{{AllowanceType: "donation", Amount: 0.0}},
+			personalDeduction:      60000.0,
+			KreceiptLimitDeduction: 50000.0,
+			expectedTaxResult:      4000.0,
+			expectedTaxLevels:      []TaxLevel{},
 		},
 		{
-			name:              "Story: EXP03 calculate tax with donation reduce",
-			totalIncome:       500000.0,
-			wht:               0.0,
-			allowances:        []Allowance{{AllowanceType: "donation", Amount: 200000.0}},
-			expectedTaxResult: 19000.0,
-			expectedTaxLevels: []TaxLevel{},
+			name:                   "Story: EXP03 calculate tax with donation reduce",
+			totalIncome:            500000.0,
+			wht:                    0.0,
+			allowances:             []Allowance{{AllowanceType: "donation", Amount: 200000.0}},
+			personalDeduction:      60000.0,
+			KreceiptLimitDeduction: 50000.0,
+			expectedTaxResult:      19000.0,
+			expectedTaxLevels:      []TaxLevel{},
 		},
 		{
-			name:              "Story: EXP04 calculate tax with tax level detail",
-			totalIncome:       500000.0,
-			wht:               0.0,
-			allowances:        []Allowance{{AllowanceType: "donation", Amount: 200000.0}},
-			expectedTaxResult: 19000.0,
+			name:                   "Story: EXP04 calculate tax with tax level detail",
+			totalIncome:            500000.0,
+			wht:                    0.0,
+			allowances:             []Allowance{{AllowanceType: "donation", Amount: 200000.0}},
+			personalDeduction:      60000.0,
+			KreceiptLimitDeduction: 50000.0,
+			expectedTaxResult:      19000.0,
 			expectedTaxLevels: []TaxLevel{
 				{"0-150,000", 0.0},
 				{"150,001-500,000", 19000.0},
@@ -53,11 +60,13 @@ func TestCalculateTax(t *testing.T) {
 			},
 		},
 		{
-			name:              "Story: EXP07 calculate tax with k-receipt and tax level detail",
-			totalIncome:       500000.0,
-			wht:               0.0,
-			allowances:        []Allowance{{AllowanceType: "k-receipt", Amount: 200000.0}, {AllowanceType: "donation", Amount: 100000.0}},
-			expectedTaxResult: 14000.0,
+			name:                   "Story: EXP07 calculate tax with k-receipt and tax level detail",
+			totalIncome:            500000.0,
+			wht:                    0.0,
+			allowances:             []Allowance{{AllowanceType: "k-receipt", Amount: 200000.0}, {AllowanceType: "donation", Amount: 100000.0}},
+			personalDeduction:      60000.0,
+			KreceiptLimitDeduction: 50000.0,
+			expectedTaxResult:      14000.0,
 			expectedTaxLevels: []TaxLevel{
 				{"0-150,000", 0.0},
 				{"150,001-500,000", 14000.0},
@@ -72,7 +81,7 @@ func TestCalculateTax(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Call the calculateTax function
-			response, err := CalculateTax(tc.totalIncome, tc.wht, tc.allowances, tc.personalDeduction)
+			response, err := CalculateTax(tc.totalIncome, tc.wht, tc.allowances, tc.personalDeduction, tc.KreceiptLimitDeduction)
 			if err != nil {
 				t.Fatalf("error calculating tax: %v", err)
 			}
