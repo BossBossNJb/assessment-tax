@@ -1,8 +1,6 @@
 package tax
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestCalculateTax(t *testing.T) {
 	testCases := []struct {
@@ -19,6 +17,7 @@ func TestCalculateTax(t *testing.T) {
 			totalIncome:       500000.0,
 			wht:               0.0,
 			allowances:        []Allowance{{AllowanceType: "donation", Amount: 0.0}},
+			personalDeduction: 60000.0,
 			expectedTaxResult: 29000.0,
 			expectedTaxLevels: []TaxLevel{},
 		},
@@ -27,6 +26,7 @@ func TestCalculateTax(t *testing.T) {
 			totalIncome:       500000.0,
 			wht:               25000.0,
 			allowances:        []Allowance{{AllowanceType: "donation", Amount: 0.0}},
+			personalDeduction: 60000.0,
 			expectedTaxResult: 4000.0,
 			expectedTaxLevels: []TaxLevel{},
 		},
@@ -35,6 +35,7 @@ func TestCalculateTax(t *testing.T) {
 			totalIncome:       500000.0,
 			wht:               0.0,
 			allowances:        []Allowance{{AllowanceType: "donation", Amount: 200000.0}},
+			personalDeduction: 60000.0,
 			expectedTaxResult: 19000.0,
 			expectedTaxLevels: []TaxLevel{},
 		},
@@ -43,6 +44,7 @@ func TestCalculateTax(t *testing.T) {
 			totalIncome:       500000.0,
 			wht:               0.0,
 			allowances:        []Allowance{{AllowanceType: "donation", Amount: 200000.0}},
+			personalDeduction: 60000.0,
 			expectedTaxResult: 19000.0,
 			expectedTaxLevels: []TaxLevel{
 				{"0-150,000", 0.0},
@@ -57,6 +59,7 @@ func TestCalculateTax(t *testing.T) {
 			totalIncome:       500000.0,
 			wht:               0.0,
 			allowances:        []Allowance{{AllowanceType: "k-receipt", Amount: 200000.0}, {AllowanceType: "donation", Amount: 100000.0}},
+			personalDeduction: 60000.0,
 			expectedTaxResult: 14000.0,
 			expectedTaxLevels: []TaxLevel{
 				{"0-150,000", 0.0},

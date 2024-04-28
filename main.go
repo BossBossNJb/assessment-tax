@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/BossBossNJb/assessment-tax/tax"
 	"github.com/joho/godotenv"
@@ -15,7 +18,6 @@ import (
 func main() {
 	e := echo.New()
 
-	// envFilePath := ".env"
 	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -59,21 +61,23 @@ func main() {
 	taxGroup.POST("/calculations", tax.CalculateTaxHandler)
 	taxGroup.GET("/calculations/deteils", tax.TaxDetails)
 
+	// Tax calculation with csv
+	taxGroup.POST("/calculations/upload-csv", tax.CalculateTaxFromCSVHandler)
+
 	// Start the server
-	// e.Logger.Fatal(e.Start(":" + port))
 	fmt.Println("port:", port)
 	fmt.Println("adminUsername:", adminUsername)
 	e.Logger.Fatal(e.Start(":" + port))
 
 	// Graceful Shutdown
-	// shutdown := make(chan os.Signal, 1)
-	// signal.Notify(shutdown, os.Interrupt)
-	// <-shutdown
-	// // Print "shutting down the server"
-	// fmt.Println("Shutting down the server...")
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// defer cancel()
-	// if err := e.Shutdown(ctx); err != nil {
-	// 	e.Logger.Fatal(err)
-	// }
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt)
+	<-shutdown
+	// Print "shutting down the server"
+	fmt.Println("Shutting down the server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
